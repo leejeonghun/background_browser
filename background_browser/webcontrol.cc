@@ -6,7 +6,12 @@
 #include <mshtml.h>
 #include <mshtmdid.h>
 
-useragent webcontrol::useragent_;
+// MSDN references:
+// WebBrowser Control- https://msdn.microsoft.com/en-us/library/aa752040(v=vs.85).aspx
+// How to handle script errors as a WebBrowser control host- https://support.microsoft.com/en-us/kb/261003
+
+
+webfeature webcontrol::feature_;
 
 webcontrol::~webcontrol() {
   uninit();
@@ -46,17 +51,9 @@ void webcontrol::uninit() {
 }
 
 bool webcontrol::set_mobile_mode(bool mobile_mode) {
-  HRESULT hr = E_FAIL;
-
-  mobile_mode_ = mobile_mode;
-  if (mobile_mode_) {
-    hr = UrlMkSetSessionOption(URLMON_OPTION_USERAGENT,
-      const_cast<char*>(useragent_.iphone()), strlen(useragent_.iphone()), 0);
-  } else {
-    hr = UrlMkSetSessionOption(URLMON_OPTION_USERAGENT_REFRESH, nullptr, 0, 0);
-  }
-
-  return SUCCEEDED(hr);
+  return feature_.set_mobile_mode(mobile_mode)
+    ? mobile_mode_ = mobile_mode, true
+    : false;
 }
 
 bool webcontrol::navigate(const wchar_t *url) const {
@@ -257,8 +254,13 @@ bool webcontrol::set_event_sink(bool setup) {
 
 HRESULT webcontrol::on_document_complete(IDispatch *disp_ptr,
     VARIANT *vt_url_ptr) {
+  HRESULT hr = S_OK;
+  if (document_complete_handler_) {
+    hr = document_complete_handler_(disp_ptr, vt_url_ptr);
+  }
+
   CComPtr<IDispatch> top_doc_ptr;
-  HRESULT hr = browser_ptr_->QueryInterface(IID_IDispatch,
+  hr = browser_ptr_->QueryInterface(IID_IDispatch,
     reinterpret_cast<void**>(&top_doc_ptr));
 
   if (SUCCEEDED(hr) && disp_ptr != nullptr) {
@@ -267,13 +269,28 @@ HRESULT webcontrol::on_document_complete(IDispatch *disp_ptr,
     }
   }
 
-  return S_OK;
+  return hr;
+}
+
+HRESULT webcontrol::on_navigate_complete(IDispatch *disp_ptr, VARIANT *vt_url) {
+  HRESULT hr = S_OK;
+  if (navigate_complete_handler_) {
+    hr = navigate_complete_handler_(disp_ptr, vt_url);
+  }
+
+  return hr;
 }
 
 HRESULT webcontrol::on_navigate_error(IDispatch *disp_ptr, VARIANT *vt_url_ptr,
     VARIANT *vt_frame_ptr, VARIANT *vt_status_ptr, VARIANT *vt_cancle_ptr) {
+  HRESULT hr = S_OK;
+  if (navigate_error_handler_) {
+    hr = navigate_error_handler_(disp_ptr, vt_url_ptr, vt_frame_ptr,
+      vt_status_ptr, vt_cancle_ptr);
+  }
+
   CComPtr<IDispatch> top_doc_ptr;
-  HRESULT hr = browser_ptr_->QueryInterface(IID_IDispatch,
+  hr = browser_ptr_->QueryInterface(IID_IDispatch,
     reinterpret_cast<void**>(&top_doc_ptr));
 
   if (SUCCEEDED(hr) && disp_ptr != nullptr) {
@@ -282,7 +299,19 @@ HRESULT webcontrol::on_navigate_error(IDispatch *disp_ptr, VARIANT *vt_url_ptr,
     }
   }
 
-  return S_OK;
+  return hr;
+}
+
+HRESULT webcontrol::on_before_navigate2(IDispatch* disp_ptr, VARIANT *vt_url_ptr,
+    VARIANT *vt_flag_ptr, VARIANT *vt_frame_ptr, VARIANT *vt_post_ptr,
+    VARIANT *vt_header_ptr, VARIANT_BOOL *vt_cancel_ptr) {
+  HRESULT hr = S_OK;
+  if (before_navigate2_handler_) {
+    hr = before_navigate2_handler_(disp_ptr, vt_url_ptr, vt_flag_ptr,
+      vt_frame_ptr, vt_post_ptr, vt_header_ptr, vt_cancel_ptr);
+  }
+
+  return hr;
 }
 
 // IOleWindow (be inherited by IOleInPlaceSite)
@@ -291,6 +320,17 @@ HRESULT _stdcall webcontrol::GetWindow(HWND *phwnd) {
   if (phwnd != nullptr) {
     *phwnd = hwnd_;
     hr = S_OK;
+  }
+
+  return hr;
+}
+
+// IDocHostShowUI
+HRESULT _stdcall webcontrol::ShowMessage(HWND hwnd, LPOLESTR text,
+    LPOLESTR caption, DWORD type, LPOLESTR helpfile, DWORD help_ctx, LRESULT *result_ptr) {
+  HRESULT hr = S_OK;
+  if (show_message_handler_) {
+    hr = show_message_handler_(hwnd, text, caption, type, helpfile, help_ctx, result_ptr);
   }
 
   return hr;
@@ -306,6 +346,18 @@ HRESULT _stdcall webcontrol::Invoke(DISPID dispid, REFIID riid, LCID lcid,
       params_ptr->rgvarg[0].pvarVal);
     break;
 
+    case DISPID_NAVIGATECOMPLETE2:
+      return this->on_navigate_complete(params_ptr->rgvarg[1].pdispVal,
+        params_ptr->rgvarg[0].pvarVal);
+     break;
+
+  case DISPID_BEFORENAVIGATE2:
+    return this->on_before_navigate2(params_ptr->rgvarg[6].pdispVal,
+      params_ptr->rgvarg[5].pvarVal, params_ptr->rgvarg[4].pvarVal,
+      params_ptr->rgvarg[3].pvarVal, params_ptr->rgvarg[2].pvarVal,
+      params_ptr->rgvarg[1].pvarVal, params_ptr->rgvarg[0].pboolVal);
+    break;
+
   case DISPID_NAVIGATEERROR:
     return this->on_navigate_error(params_ptr->rgvarg[4].pdispVal,
       params_ptr->rgvarg[3].pvarVal, params_ptr->rgvarg[2].pvarVal,
@@ -315,7 +367,7 @@ HRESULT _stdcall webcontrol::Invoke(DISPID dispid, REFIID riid, LCID lcid,
   case DISPID_AMBIENT_USERAGENT:
     if (mobile_mode_) {
       result_ptr->vt = VT_BSTR;
-      result_ptr->bstrVal = SysAllocString(CA2W(useragent_.iphone()));
+      result_ptr->bstrVal = SysAllocString(CA2W(feature_.get_useragent().iphone()));
     }
     break;
 
@@ -335,6 +387,8 @@ HRESULT _stdcall webcontrol::QueryInterface(REFIID riid, void **obj_pp) {
       *obj_pp = static_cast<IOleInPlaceSite*>(this);
     } else if (riid == IID_IOleClientSite) {
       *obj_pp = static_cast<IOleClientSite*>(this);
+    } else if (riid == IID_IDocHostShowUI) {
+      *obj_pp = static_cast<IDocHostShowUI*>(this);
     } else if (riid == IID_IDispatch) {
       *obj_pp = static_cast<IDispatch*>(this);
     } else if (riid == IID_IUnknown) {

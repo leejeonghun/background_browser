@@ -101,17 +101,57 @@ bool webdriver::set_mobile_mode(bool mobile_mode) {
   return set_mode;
 }
 
+bool webdriver::set_document_complete(HRESULT func(IDispatch*, VARIANT*)) {
+  return host_ptr_ != nullptr ?
+    host_ptr_->get_webctrl().document_complete_handler_ = func, true :
+    false;
+}
+
+bool webdriver::set_navigation_complete(HRESULT func(IDispatch*, VARIANT*)) {
+  return host_ptr_ != nullptr ?
+    host_ptr_->get_webctrl().navigate_complete_handler_ = func, true :
+    false;
+}
+
+bool webdriver::set_navigate_error(HRESULT func(IDispatch *disp_ptr, VARIANT *vt_url_ptr,
+    VARIANT *vt_frame_ptr, VARIANT *vt_status_ptr, VARIANT *vt_cancle_ptr)) {
+  return host_ptr_ != nullptr ?
+    host_ptr_->get_webctrl().navigate_error_handler_ = func, true :
+    false;
+}
+
+bool webdriver::set_before_navigate2(HRESULT func(IDispatch* disp_ptr, VARIANT *vt_url_ptr,
+    VARIANT *vt_flag_ptr, VARIANT *vt_frame_ptr, VARIANT *vt_post_ptr,
+    VARIANT *vt_header_ptr, VARIANT_BOOL *vt_cancel_ptr)) {
+  return host_ptr_ != nullptr ?
+    host_ptr_->get_webctrl().before_navigate2_handler_ = func, true :
+    false;
+}
+
+bool webdriver::set_show_message(HRESULT func(HWND, LPWSTR, LPWSTR, DWORD, LPWSTR, DWORD, LRESULT*)) {
+  return host_ptr_ != nullptr ?
+    host_ptr_->get_webctrl().show_message_handler_ = func, true : false;
+}
+
 unsigned _stdcall webdriver::relay_proc(void* arg_ptr) {
   return arg_ptr ? reinterpret_cast<webdriver*>(arg_ptr)->thread_proc() : -1;
 }
 
 unsigned webdriver::thread_proc() {
+  unsigned retcode = -1;
+
   host_window browser;
   init_ = browser.create(hevent_);
   if (init_) {
+    host_ptr_ = &browser;
     hwnd_ = browser.get_hwnd();
   }
   SetEvent(hevent_);
 
-  return init_ ? browser.run_msg_loop() : -1;
+  if (init_) {
+    retcode = browser.run_msg_loop();
+    host_ptr_ = nullptr;
+  }
+
+  return retcode;
 }

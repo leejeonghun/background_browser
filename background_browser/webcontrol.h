@@ -7,9 +7,11 @@
 #include <windows.h>
 #include <atlcomcli.h>
 #include <exdisp.h>
+#include <mshtmhst.h>
 #include <cstdint>
 #include <string>
-#include "background_browser/useragent.h"
+#include <functional>
+#include "background_browser/webfeature.h"
 
 enum {
   WM_NAVIGATE_COMPLETE = WM_APP + 100,
@@ -24,7 +26,10 @@ enum {
 class webcontrol
     : public IOleInPlaceSite
     , public IOleClientSite
+    , public IDocHostShowUI
     , public IDispatch {
+  friend class webdriver;
+
  public:
   webcontrol() = default;
   virtual ~webcontrol();
@@ -42,9 +47,13 @@ class webcontrol
   inline bool set_client_site(bool setup, HWND hwnd);
   inline bool set_event_sink(bool setup);
 
-  HRESULT on_document_complete(IDispatch *disp_ptr, VARIANT *vt_url_ptr);
-  HRESULT on_navigate_error(IDispatch *disp_ptr, VARIANT *vt_url_ptr,
+  inline HRESULT on_document_complete(IDispatch *disp_ptr, VARIANT *vt_url_ptr);
+  inline HRESULT on_navigate_complete(IDispatch *disp_ptr, VARIANT *vt_url);
+  inline HRESULT on_navigate_error(IDispatch *disp_ptr, VARIANT *vt_url_ptr,
     VARIANT *vt_frame_ptr, VARIANT *vt_status_ptr, VARIANT *vt_cancle_ptr);
+  inline HRESULT on_before_navigate2(IDispatch* disp_ptr, VARIANT *vt_url_ptr,
+    VARIANT *vt_flag_ptr, VARIANT *vt_frame_ptr, VARIANT *vt_post_ptr,
+    VARIANT *vt_header_ptr, VARIANT_BOOL *vt_cancel_ptr);
 
   // IOleInPlaceSite
   HRESULT _stdcall GetWindowContext(IOleInPlaceFrame**, IOleInPlaceUIWindow**,
@@ -71,6 +80,10 @@ class webcontrol
   HRESULT _stdcall OnShowWindow(BOOL) { return S_OK; }
   HRESULT _stdcall RequestNewObjectLayout() { return E_NOTIMPL; }
 
+  // IDocHostShowUI
+  HRESULT _stdcall ShowMessage(HWND hwnd, LPOLESTR text, LPOLESTR caption, DWORD type, LPOLESTR helpfile, DWORD help_ctx, LRESULT *result_ptr);
+  HRESULT _stdcall ShowHelp(HWND, LPOLESTR, UINT, DWORD, POINT, IDispatch*) { return E_NOTIMPL; }
+
   // IDispatch
   HRESULT _stdcall Invoke(DISPID dispid, REFIID riid, LCID lcid,
     WORD flags, DISPPARAMS *params_ptr, VARIANT *result_ptr,
@@ -86,11 +99,17 @@ class webcontrol
   ULONG _stdcall AddRef() { return 1; }
   ULONG _stdcall Release() { return 1; }
 
-  static useragent useragent_;
+  static webfeature feature_;
   HWND hwnd_ = NULL;
   bool mobile_mode_ = false;
   DWORD advise_cookie_ = 0;
   CComPtr<IWebBrowser2> browser_ptr_;
+
+  std::function<HRESULT(IDispatch*, VARIANT*)> document_complete_handler_;
+  std::function<HRESULT(IDispatch*, VARIANT*)> navigate_complete_handler_;
+  std::function<HRESULT(IDispatch*, VARIANT*, VARIANT*, VARIANT*, VARIANT*)> navigate_error_handler_;
+  std::function<HRESULT(IDispatch*, VARIANT*, VARIANT*, VARIANT*, VARIANT*, VARIANT*, VARIANT_BOOL*)> before_navigate2_handler_;
+  std::function<HRESULT(HWND, LPWSTR, LPWSTR, DWORD, LPWSTR, DWORD, LRESULT*)> show_message_handler_;
 };
 
 #endif  // BACKGROUND_BROWSER_WEBCONTROL_H_
