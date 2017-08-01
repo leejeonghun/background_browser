@@ -282,11 +282,11 @@ HRESULT webcontrol::on_navigate_complete(IDispatch *disp_ptr, VARIANT *vt_url) {
 }
 
 HRESULT webcontrol::on_navigate_error(IDispatch *disp_ptr, VARIANT *vt_url_ptr,
-    VARIANT *vt_frame_ptr, VARIANT *vt_status_ptr, VARIANT *vt_cancle_ptr) {
+    VARIANT *vt_frame_ptr, VARIANT *vt_status_ptr, VARIANT *vt_cancel_ptr) {
   HRESULT hr = S_OK;
   if (navigate_error_handler_) {
     hr = navigate_error_handler_(disp_ptr, vt_url_ptr, vt_frame_ptr,
-      vt_status_ptr, vt_cancle_ptr);
+      vt_status_ptr, vt_cancel_ptr);
   }
 
   CComPtr<IDispatch> top_doc_ptr;

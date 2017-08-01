@@ -50,8 +50,8 @@ class webcontrol
   inline HRESULT on_document_complete(IDispatch *disp_ptr, VARIANT *vt_url_ptr);
   inline HRESULT on_navigate_complete(IDispatch *disp_ptr, VARIANT *vt_url);
   inline HRESULT on_navigate_error(IDispatch *disp_ptr, VARIANT *vt_url_ptr,
-    VARIANT *vt_frame_ptr, VARIANT *vt_status_ptr, VARIANT *vt_cancle_ptr);
-  inline HRESULT on_before_navigate2(IDispatch* disp_ptr, VARIANT *vt_url_ptr,
+    VARIANT *vt_frame_ptr, VARIANT *vt_status_ptr, VARIANT *vt_cancel_ptr);
+  inline HRESULT on_before_navigate2(IDispatch *disp_ptr, VARIANT *vt_url_ptr,
     VARIANT *vt_flag_ptr, VARIANT *vt_frame_ptr, VARIANT *vt_post_ptr,
     VARIANT *vt_header_ptr, VARIANT_BOOL *vt_cancel_ptr);
 
