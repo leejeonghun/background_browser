@@ -21,6 +21,7 @@ enum {
   WM_REQ_HTML_RAW_SOURCE,
   WM_REQ_HTML_SOURCE,
   WM_REQ_NAVIGATE_ERRCODE,
+  WM_REQ_CHECK_READY,
 };
 
 class webcontrol
@@ -40,6 +41,7 @@ class webcontrol
   bool navigate(const wchar_t *url) const;
   bool execute_script(const wchar_t *script) const;
   bool eval_script(const wchar_t *script) const;
+  bool chk_ready() const;
   std::wstring get_raw_html_source() const;
   std::wstring get_html_source() const;
 

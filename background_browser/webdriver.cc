@@ -68,6 +68,21 @@ bool webdriver::execute_script(const wchar_t *script,
   return execute;
 }
 
+bool webdriver::wait_for_ready() const {
+  enum { POLLING_DELAY = 250 };
+
+  bool ready = false;
+
+  if (hthread_ != NULL) {
+    while (SendMessage(hwnd_, WM_REQ_CHECK_READY, 0, 0) == FALSE) {
+      Sleep(POLLING_DELAY);
+    }
+    ready = true;
+  }
+
+  return ready;
+}
+
 const wchar_t* webdriver::get_html() const {
   const wchar_t* html_ptr = nullptr;
 

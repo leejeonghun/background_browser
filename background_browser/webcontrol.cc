@@ -130,6 +130,21 @@ bool webcontrol::eval_script(const wchar_t *script) const {
   return false;
 }
 
+bool webcontrol::chk_ready() const {
+  bool ready = false;
+
+  if (browser_ptr_ != nullptr) {
+    VARIANT_BOOL busy = VARIANT_FALSE;
+    if (SUCCEEDED(browser_ptr_->get_Busy(&busy)) && busy == VARIANT_FALSE) {
+      READYSTATE state = READYSTATE_UNINITIALIZED;
+      ready = SUCCEEDED(browser_ptr_->get_ReadyState(&state)) &&
+        state == READYSTATE_COMPLETE;
+    }
+  }
+
+  return ready;
+}
+
 std::wstring webcontrol::get_raw_html_source() const {
   std::wstring html;
 

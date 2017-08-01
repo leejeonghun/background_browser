@@ -18,6 +18,7 @@ class webdriver final {
   void uninit();
   bool navigate(const wchar_t *url, int32_t *errcode_ptr = nullptr) const;
   bool execute_script(const wchar_t *script, bool wait_for_doc = false) const;
+  bool wait_for_ready() const;
   const wchar_t* get_html() const;
   const wchar_t* get_raw_html() const;
   bool set_mobile_mode(bool mobile_mode);

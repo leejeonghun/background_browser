@@ -102,6 +102,10 @@ LRESULT host_window::wndproc(HWND hwnd, UINT msg,
     result = errcode_;
     break;
 
+  case WM_REQ_CHECK_READY:
+    result = web_ctrl_.chk_ready();
+    break;
+
   case WM_NAVIGATE_COMPLETE:
     errcode_ = wparam;
     SetEvent(hevent_);
