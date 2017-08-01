@@ -133,6 +133,11 @@ bool webdriver::set_show_message(HRESULT func(HWND, LPWSTR, LPWSTR, DWORD, LPWST
     host_ptr_->get_webctrl().show_message_handler_ = func, true : false;
 }
 
+bool webdriver::set_new_window3(HRESULT func(IDispatch*, VARIANT_BOOL*, DWORD, BSTR, BSTR)) {
+  return host_ptr_ != nullptr ?
+    host_ptr_->get_webctrl().new_window3_handler_ = func, true : false;
+}
+
 unsigned _stdcall webdriver::relay_proc(void* arg_ptr) {
   return arg_ptr ? reinterpret_cast<webdriver*>(arg_ptr)->thread_proc() : -1;
 }

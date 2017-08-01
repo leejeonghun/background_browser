@@ -30,6 +30,7 @@ class webdriver final {
     VARIANT *vt_flag_ptr, VARIANT *vt_frame_ptr, VARIANT *vt_post_ptr,
     VARIANT *vt_header_ptr, VARIANT_BOOL *vt_cancel_ptr));
   bool set_show_message(HRESULT func(HWND, LPWSTR, LPWSTR, DWORD, LPWSTR, DWORD, LRESULT*));
+  bool set_new_window3(HRESULT func(IDispatch*, VARIANT_BOOL*, DWORD, BSTR, BSTR));
 
  private:
   static unsigned _stdcall relay_proc(void* arg_ptr);

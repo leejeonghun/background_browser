@@ -314,6 +314,16 @@ HRESULT webcontrol::on_before_navigate2(IDispatch* disp_ptr, VARIANT *vt_url_ptr
   return hr;
 }
 
+HRESULT webcontrol::on_new_window3(IDispatch *disp_ptr, VARIANT_BOOL *vt_cancel_ptr,
+    DWORD flags, BSTR urlctx, BSTR url) {
+  HRESULT hr = S_OK;
+  if (new_window3_handler_) {
+    hr = new_window3_handler_(disp_ptr, vt_cancel_ptr, flags, urlctx, url);
+  }
+
+  return hr;
+}
+
 // IOleWindow (be inherited by IOleInPlaceSite)
 HRESULT _stdcall webcontrol::GetWindow(HWND *phwnd) {
   HRESULT hr = E_INVALIDARG;
@@ -342,26 +352,32 @@ HRESULT _stdcall webcontrol::Invoke(DISPID dispid, REFIID riid, LCID lcid,
     EXCEPINFO *ei_ptr, UINT *err_arg_ptr) {
   switch (dispid) {
   case DISPID_DOCUMENTCOMPLETE:
-    return this->on_document_complete(params_ptr->rgvarg[1].pdispVal,
+    return on_document_complete(params_ptr->rgvarg[1].pdispVal,
       params_ptr->rgvarg[0].pvarVal);
     break;
 
-    case DISPID_NAVIGATECOMPLETE2:
-      return this->on_navigate_complete(params_ptr->rgvarg[1].pdispVal,
+  case DISPID_NAVIGATECOMPLETE2:
+      return on_navigate_complete(params_ptr->rgvarg[1].pdispVal,
         params_ptr->rgvarg[0].pvarVal);
      break;
 
   case DISPID_BEFORENAVIGATE2:
-    return this->on_before_navigate2(params_ptr->rgvarg[6].pdispVal,
+    return on_before_navigate2(params_ptr->rgvarg[6].pdispVal,
       params_ptr->rgvarg[5].pvarVal, params_ptr->rgvarg[4].pvarVal,
       params_ptr->rgvarg[3].pvarVal, params_ptr->rgvarg[2].pvarVal,
       params_ptr->rgvarg[1].pvarVal, params_ptr->rgvarg[0].pboolVal);
     break;
 
   case DISPID_NAVIGATEERROR:
-    return this->on_navigate_error(params_ptr->rgvarg[4].pdispVal,
+    return on_navigate_error(params_ptr->rgvarg[4].pdispVal,
       params_ptr->rgvarg[3].pvarVal, params_ptr->rgvarg[2].pvarVal,
       params_ptr->rgvarg[1].pvarVal, params_ptr->rgvarg[0].pvarVal);
+    break;
+
+  case DISPID_NEWWINDOW3:
+    return this->on_new_window3(params_ptr->rgvarg[4].pdispVal,
+      params_ptr->rgvarg[3].pboolVal, params_ptr->rgvarg[2].lVal,
+      params_ptr->rgvarg[1].bstrVal, params_ptr->rgvarg[0].bstrVal);
     break;
 
   case DISPID_AMBIENT_USERAGENT:

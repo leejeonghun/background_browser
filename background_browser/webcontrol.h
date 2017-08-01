@@ -54,6 +54,8 @@ class webcontrol
   inline HRESULT on_before_navigate2(IDispatch *disp_ptr, VARIANT *vt_url_ptr,
     VARIANT *vt_flag_ptr, VARIANT *vt_frame_ptr, VARIANT *vt_post_ptr,
     VARIANT *vt_header_ptr, VARIANT_BOOL *vt_cancel_ptr);
+  inline HRESULT on_new_window3(IDispatch *disp_ptr, VARIANT_BOOL *vt_cancel_ptr,
+    DWORD flags, BSTR urlctx, BSTR url);
 
   // IOleInPlaceSite
   HRESULT _stdcall GetWindowContext(IOleInPlaceFrame**, IOleInPlaceUIWindow**,
@@ -110,6 +112,7 @@ class webcontrol
   std::function<HRESULT(IDispatch*, VARIANT*, VARIANT*, VARIANT*, VARIANT*)> navigate_error_handler_;
   std::function<HRESULT(IDispatch*, VARIANT*, VARIANT*, VARIANT*, VARIANT*, VARIANT*, VARIANT_BOOL*)> before_navigate2_handler_;
   std::function<HRESULT(HWND, LPWSTR, LPWSTR, DWORD, LPWSTR, DWORD, LRESULT*)> show_message_handler_;
+  std::function<HRESULT(IDispatch*, VARIANT_BOOL*, DWORD, BSTR, BSTR)> new_window3_handler_;
 };
 
 #endif  // BACKGROUND_BROWSER_WEBCONTROL_H_
