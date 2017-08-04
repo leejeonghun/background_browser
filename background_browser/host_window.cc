@@ -20,16 +20,6 @@ bool host_window::create(HANDLE hevent) {
   return IsWindow(hwnd_) != FALSE && hevent_ != NULL;
 }
 
-const wchar_t* host_window::get_html() {
-  html_ = web_ctrl_.get_html_source();
-  return html_.c_str();
-}
-
-const wchar_t* host_window::get_raw_html() {
-  html_ = web_ctrl_.get_raw_html_source();
-  return html_.c_str();
-}
-
 int32_t host_window::run_msg_loop() const {
   MSG msg = { 0 };
   while (::GetMessage(&msg, NULL, 0, 0)) {

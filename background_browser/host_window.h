@@ -16,8 +16,6 @@ class host_window {
   bool create(HANDLE hevent);
   inline HWND get_hwnd() const { return hwnd_; }
   inline webcontrol& get_webctrl() { return web_ctrl_; }
-  const wchar_t* get_html();
-  const wchar_t* get_raw_html();
   int32_t run_msg_loop() const;
 
  private:
