@@ -216,6 +216,20 @@ std::wstring webcontrol::get_html_source() const {
   return html;
 }
 
+std::wstring webcontrol::get_curr_url() const {
+  std::wstring url;
+
+  if (browser_ptr_ != nullptr) {
+    BSTR url_ptr = nullptr;
+    if (SUCCEEDED(browser_ptr_->get_LocationURL(&url_ptr))) {
+      url = url_ptr;
+      SysFreeString(url_ptr);
+    }
+  }
+
+  return url;
+}
+
 bool webcontrol::set_client_site(bool setup, HWND hwnd) {
   if (browser_ptr_ != nullptr) {
     CComPtr<IOleObject> ole_obj_ptr;

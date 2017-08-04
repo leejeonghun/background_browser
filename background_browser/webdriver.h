@@ -21,6 +21,7 @@ class webdriver final {
   bool wait_for_ready() const;
   const wchar_t* get_html() const;
   const wchar_t* get_raw_html() const;
+  const wchar_t* get_url() const;
   bool set_mobile_mode(bool mobile_mode);
 
   bool set_document_complete(HRESULT func(IDispatch*, VARIANT*));

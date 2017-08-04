@@ -22,6 +22,7 @@ enum {
   WM_REQ_HTML_SOURCE,
   WM_REQ_NAVIGATE_ERRCODE,
   WM_REQ_CHECK_READY,
+  WM_REQ_CURRENT_URL,
 };
 
 class webcontrol
@@ -44,6 +45,7 @@ class webcontrol
   bool chk_ready() const;
   std::wstring get_raw_html_source() const;
   std::wstring get_html_source() const;
+  std::wstring get_curr_url() const;
 
  private:
   inline bool set_client_site(bool setup, HWND hwnd);

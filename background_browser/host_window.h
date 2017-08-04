@@ -30,6 +30,7 @@ class host_window {
   int32_t errcode_ = 0;
   webcontrol web_ctrl_;
   std::wstring html_;
+  std::wstring curr_url_;
 };
 
 #endif  // BACKGROUND_BROWSER_HOST_WINDOW_H_

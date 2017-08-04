@@ -105,6 +105,17 @@ const wchar_t* webdriver::get_raw_html() const {
   return html_ptr;
 }
 
+const wchar_t* webdriver::get_url() const {
+  const wchar_t* url_ptr = nullptr;
+
+  if (hthread_ != NULL) {
+    url_ptr = reinterpret_cast<const wchar_t*>(
+      SendMessage(hwnd_, WM_REQ_CURRENT_URL, 0, 0));
+  }
+
+  return url_ptr;
+}
+
 bool webdriver::set_mobile_mode(bool mobile_mode) {
   bool set_mode = false;
 

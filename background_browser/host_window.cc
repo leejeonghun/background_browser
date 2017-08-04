@@ -96,6 +96,11 @@ LRESULT host_window::wndproc(HWND hwnd, UINT msg,
     result = web_ctrl_.chk_ready();
     break;
 
+  case WM_REQ_CURRENT_URL:
+    curr_url_ = web_ctrl_.get_curr_url();
+    result = reinterpret_cast<LRESULT>(curr_url_.c_str());
+    break;
+
   case WM_NAVIGATE_COMPLETE:
     errcode_ = wparam;
     SetEvent(hevent_);
